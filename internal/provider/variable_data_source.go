@@ -18,6 +18,7 @@ type variableDataSource struct{}
 // variableDataSourceModel describes the data model for this data source.
 type variableDataSourceModel struct {
 	ID    types.String `tfsdk:"id"`
+	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
 
@@ -33,6 +34,10 @@ func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 		MarkdownDescription: "The variable data source exposes a shell environment variable to terraform.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The unique ID for this data source.",
+			},
+			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The name of the shell environment variable to read.",
 			},
@@ -53,13 +58,15 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	v, ok := os.LookupEnv(data.ID.ValueString())
+	v, ok := os.LookupEnv(data.Name.ValueString())
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Not found",
 			"The environment variable is not present.",
 		)
 	}
+
+	data.ID = data.Name
 	data.Value = types.StringValue(v)
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
