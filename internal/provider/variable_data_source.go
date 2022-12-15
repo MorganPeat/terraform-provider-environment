@@ -15,10 +15,10 @@ var _ datasource.DataSource = &variableDataSource{}
 // variableDataSource is the data source implementation.
 type variableDataSource struct{}
 
-// variableDataSource describes the data model for this data source.
-type variableDataSourceModel struct {
-	id    types.String `tfsdk:"id"`
-	value types.String `tfsdk:"value"`
+// VariableDataSourceModel describes the data model for this data source.
+type VariableDataSourceModel struct {
+	ID    types.String `tfsdk:"id"`
+	Value types.String `tfsdk:"value"`
 }
 
 // Metadata returns the data source type name.
@@ -47,20 +47,20 @@ func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 // Read refreshes the Terraform state with the latest data.
 func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var data variableDataSourceModel
+	var data VariableDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	v, ok := os.LookupEnv(data.id.ValueString())
+	v, ok := os.LookupEnv(data.ID.ValueString())
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Not found",
 			"The environment variable is not present.",
 		)
 	}
-	data.value = types.StringValue(v)
+	data.Value = types.StringValue(v)
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
