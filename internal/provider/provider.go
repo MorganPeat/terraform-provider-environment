@@ -19,37 +19,39 @@ type environmentProvider struct {
 	Version string
 }
 
-// Metadata returns the provider type name.
+// Metadata returns the metadata for the provider, such as
+// the type name and version data.
 func (p *environmentProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+
+	// TypeName is the prefix used in each data source and resource name
 	resp.TypeName = "environment"
+
+	// Version is not used by the terraform framework yet.
+	resp.Version = p.Version
 }
 
-// Schema defines the provider-level schema for configuration data.
+// Schema returns the schema for this provider
 func (p *environmentProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			// Provider specific implementation.
-		},
+		MarkdownDescription: "The environment provider reads shell environment variables.",
 	}
 }
 
-// Configure prepares the provider for data sources and resources.
+// Configure prepares the provider for use, with the values the user specified
+// in the provider configuration block.
 func (p *environmentProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	// Provider specific implementation.
 }
 
 // DataSources defines the data sources implemented in the provider.
 func (p *environmentProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		// Provider specific implementation
+		NewVariableDataSource,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *environmentProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		// Provider specific implementation
-	}
+	return nil
 }
 
 // New creates a new environmentProvider
