@@ -52,4 +52,4 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 changelog:
-  use: github-native
+  use: github
