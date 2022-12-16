@@ -30,7 +30,7 @@ func (p *environmentProvider) Metadata(ctx context.Context, req provider.Metadat
 	resp.Version = p.Version
 }
 
-// Schema returns the schema for this provider
+// Schema returns the schema for this provider.
 func (p *environmentProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
@@ -60,7 +60,7 @@ func (p *environmentProvider) Resources(ctx context.Context) []func() resource.R
 	return nil
 }
 
-// New creates a new environmentProvider
+// New creates a new environmentProvider.
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
 		return &environmentProvider{
