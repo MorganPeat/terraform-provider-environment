@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
-// Run the docs generation tool, check its repository for more information on how it works and how docs
-// can be customized.
+// Ensure examples are correctly formatted
+//go:generate terraform fmt -recursive ./examples/
+
+// Auto-generates documentation for the terraform registry
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 var (

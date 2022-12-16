@@ -33,7 +33,13 @@ func (p *environmentProvider) Metadata(ctx context.Context, req provider.Metadat
 // Schema returns the schema for this provider
 func (p *environmentProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The environment provider reads shell environment variables.",
+		MarkdownDescription: `
+The environment provider reads shell environment variables and makes them available as a terraform data source.  
+
+Each environment variable is read using its explicit name. This makes it straightforward to use policy-as-code rules in
+a language like [HashiCorp Sentinel](https://www.hashicorp.com/sentinel) to control which environment variables are
+exposed to terraform state.
+`,
 	}
 }
 

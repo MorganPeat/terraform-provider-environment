@@ -31,11 +31,15 @@ func (d *variableDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The variable data source exposes a shell environment variable to terraform.",
+		MarkdownDescription: `
+The variable data source exposes a shell environment variable to terraform.
+
+Any change in the value of the shell environment variable will show up as a change in the terraform plan.
+`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "The unique ID for this data source.",
+				MarkdownDescription: "Unique identifier for this resource. This matches the name of the environment variable.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
