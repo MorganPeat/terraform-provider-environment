@@ -36,5 +36,3 @@ output "path" {
 
 - `id` (String) Unique identifier for this resource. This matches the name of the environment variable.
 - `value` (String) The value of the shell environment variable.
-
-
