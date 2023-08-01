@@ -52,6 +52,7 @@ func (p *environmentProvider) Configure(ctx context.Context, req provider.Config
 func (p *environmentProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewVariableDataSource,
+		NewSensitiveVariableDataSource,
 	}
 }
 
