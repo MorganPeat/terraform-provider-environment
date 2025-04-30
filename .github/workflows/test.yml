@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
         id: go
 
       - name: Check out code into the Go module directory
@@ -32,6 +32,9 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           version: latest
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
       - name: Generate
         run: make generate
@@ -63,11 +66,18 @@ jobs:
           - "1.3.*"
           - "1.4.*"
           - "1.5.*"
+          - "1.6.*"
+          - "1.7.*"
+          - "1.8.*"
+          - "1.9.*"
+          - "1.10.*"
+          - "1.11.*"
+          - "1.12.*"
     steps:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
           check-latest: true
 
       - name: Check out code
