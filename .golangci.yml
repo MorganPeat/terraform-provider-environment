@@ -1,18 +1,31 @@
----
+version: "2"
 linters:
-  # Default linters enabled
-  # See: https://golangci-lint.run/usage/linters/#enabled-by-default-linters
-
-  # Additional linters enabled
   enable:
     - durationcheck
-    - exportloopref
     - godot
-    - gofmt
     - makezero
     - misspell
     - nilerr
     - predeclared
-    - tenv
     - unconvert
     - unparam
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
