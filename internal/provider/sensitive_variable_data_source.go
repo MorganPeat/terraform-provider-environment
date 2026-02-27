@@ -7,18 +7,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
+// Ensure the implementation satisfies the expected interfaces.
 var _ datasource.DataSource = &sensitiveVariableDataSource{}
 
+// NewSensitiveVariableDataSource is a helper function to simplify the provider implementation.
 func NewSensitiveVariableDataSource() datasource.DataSource {
 	return &sensitiveVariableDataSource{}
 }
 
+// sensitiveVariableDataSource is the data source implementation.
 type sensitiveVariableDataSource struct{}
 
+// Metadata returns the data source type name.
 func (d *sensitiveVariableDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_sensitive_variable"
 }
 
+// Schema defines the schema for the data source.
 func (d *sensitiveVariableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
@@ -44,6 +49,7 @@ Any change in the value of the shell environment variable will show up as a chan
 	}
 }
 
+// Read refreshes the Terraform state with the latest data.
 func (d *sensitiveVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// NOTE: We can use the read-method for the data source `environment_variable` as-is, because
 	// all this data source does, is adding "Sensitive: true" to the schema of the property.

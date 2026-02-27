@@ -27,8 +27,7 @@ func (d *variableDataSource) Metadata(_ context.Context, req datasource.Metadata
 	resp.TypeName = req.ProviderTypeName + "_variable"
 }
 
-// GetSchema defines the schema for the data source.
-
+// Schema defines the schema for the data source.
 func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
@@ -55,7 +54,6 @@ Any change in the value of the shell environment variable will show up as a chan
 
 // Read refreshes the Terraform state with the latest data.
 func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	var data variableDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -68,6 +66,7 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"Not found",
 			"The environment variable is not present.",
 		)
+		return
 	}
 
 	data.ID = data.Name
