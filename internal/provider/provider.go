@@ -22,8 +22,7 @@ type environmentProvider struct {
 // Metadata returns the metadata for the provider, such as
 // the type name and version data.
 func (p *environmentProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-
-	// TypeName is the prefix used in each data source and resource name
+	// TypeName is the prefix used in each data source and resource name.
 	resp.TypeName = "environment"
 
 	// Version is not used by the terraform framework yet.
