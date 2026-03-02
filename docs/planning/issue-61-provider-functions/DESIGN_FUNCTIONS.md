@@ -91,13 +91,23 @@ Key framework capabilities:
 output "test" {
   value = provider::environment::variable("MY_VAR")
 }
-# Error: Environment variable "MY_VAR" is not set
+# Error: Environment variable "MY_VAR" not found
 ```
 
+**Error Message Format**: `Environment variable "NAME" not found`
+- Consistent with data source error handling
+- Uses quoted variable name for clarity
+- Clear and concise
+
 **Rationale**:
-- Matches existing data source behavior
+- Matches existing data source behavior (fails on missing variable)
 - Prevents silent failures
 - Clear error messages for debugging
+
+**Edge Cases**:
+- Empty string value (`VAR=""`) returns empty string (not an error)
+- Unset variable returns error
+- This matches `os.LookupEnv()` behavior
 
 **Alternative Considered**: Return empty string for missing variables
 - **Rejected**: Could mask configuration errors; explicit failure is better
@@ -130,9 +140,12 @@ internal/provider/
 
 **File**: `internal/provider/provider.go`
 
-Add `Functions()` method to `environmentProvider`:
+Add interface assertion and `Functions()` method to `environmentProvider`:
 
 ```go
+// Ensure the implementation satisfies the provider.ProviderWithFunctions interface.
+var _ provider.ProviderWithFunctions = &environmentProvider{}
+
 // Functions defines the functions implemented in the provider.
 func (p *environmentProvider) Functions(ctx context.Context) []func() function.Function {
     return []func() function.Function{
@@ -151,6 +164,7 @@ package provider
 
 import (
     "context"
+    "fmt"
     "os"
 
     "github.com/hashicorp/terraform-plugin-framework/function"
@@ -182,6 +196,8 @@ func (f *variableFunction) Definition(ctx context.Context, req function.Definiti
     }
 }
 
+// Run executes the function logic, reading the environment variable
+// and returning its value or an error if not found.
 func (f *variableFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
     var name string
     resp.Error = req.Arguments.Get(ctx, &name)
@@ -193,7 +209,7 @@ func (f *variableFunction) Run(ctx context.Context, req function.RunRequest, res
     if !ok {
         resp.Error = function.NewArgumentFuncError(
             0,
-            "Environment variable not found: "+name,
+            fmt.Sprintf("Environment variable %q not found", name),
         )
         return
     }
@@ -211,6 +227,7 @@ package provider
 
 import (
     "context"
+    "fmt"
     "os"
 
     "github.com/hashicorp/terraform-plugin-framework/function"
@@ -244,6 +261,8 @@ func (f *sensitiveVariableFunction) Definition(ctx context.Context, req function
     }
 }
 
+// Run executes the function logic, reading the environment variable
+// and returning its value marked as sensitive, or an error if not found.
 func (f *sensitiveVariableFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
     var name string
     resp.Error = req.Arguments.Get(ctx, &name)
@@ -255,7 +274,7 @@ func (f *sensitiveVariableFunction) Run(ctx context.Context, req function.RunReq
     if !ok {
         resp.Error = function.NewArgumentFuncError(
             0,
-            "Environment variable not found: "+name,
+            fmt.Sprintf("Environment variable %q not found", name),
         )
         return
     }
@@ -273,8 +292,10 @@ func (f *sensitiveVariableFunction) Run(ctx context.Context, req function.RunReq
 Test cases:
 1. **Success case**: Variable exists and is returned correctly
 2. **Error case**: Variable doesn't exist, returns appropriate error
-3. **Empty value case**: Variable exists but is empty string
-4. **Special characters**: Variable name and value with special characters
+3. **Empty value case**: Variable exists but is empty string (should return empty string, not error)
+4. **Special characters**: Variable name and value with special characters (including unicode, spaces, quotes)
+5. **Multiline values**: Variable with newlines in the value
+6. **Large values**: Variable with very long value (>1KB)
 
 ```go
 func TestVariableFunction_Success(t *testing.T) {
@@ -335,12 +356,12 @@ func TestAccVariableFunction(t *testing.T) {
 
 **File**: `templates/index.md.tmpl`
 
-Add section on functions:
+Add section on functions after the data sources section:
 
 ```markdown
-## Functions
+## Functions (Terraform 1.8+)
 
-This provider also supports provider-defined functions (Terraform 1.8+) for a more concise syntax:
+This provider supports provider-defined functions for a more concise syntax when using Terraform 1.8 or later:
 
 ### variable
 
@@ -397,7 +418,12 @@ output "path" {
 - Direct inline usage in expressions
 - Evaluated on-demand
 
-**Note**: Data sources remain available for backward compatibility with Terraform < 1.8.
+**When to Use Functions vs Data Sources**:
+- Use **functions** (Terraform 1.8+) for simpler, inline access to environment variables
+- Use **data sources** (Terraform 1.0+) when you need backward compatibility or prefer explicit resource blocks
+- Both approaches can be used together in the same configuration
+
+**Note**: Data sources remain fully supported for backward compatibility with Terraform < 1.8.
 ```
 
 #### Function-Specific Documentation
@@ -542,11 +568,21 @@ See the [documentation](https://registry.terraform.io/providers/morganpeat/envir
 ## Testing Checklist
 
 - [ ] Unit tests pass for `variable` function
+  - [ ] Variable exists and returns correct value
+  - [ ] Variable doesn't exist returns error
+  - [ ] Empty string value handled correctly
+  - [ ] Special characters (unicode, quotes, spaces)
+  - [ ] Multiline values
+  - [ ] Large values (>1KB)
 - [ ] Unit tests pass for `sensitive_variable` function
+  - [ ] Same test cases as variable function
+  - [ ] Verify sensitivity marking
 - [ ] Acceptance tests pass for both functions
 - [ ] Functions work with Terraform 1.8+
 - [ ] Data sources still work (backward compatibility)
+- [ ] Mixed usage (functions + data sources in same config)
 - [ ] Error messages are clear and helpful
+- [ ] Error messages consistent with data sources
 - [ ] Sensitive values are properly marked
 - [ ] Documentation generates correctly
 - [ ] Examples run successfully

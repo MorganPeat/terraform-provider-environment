@@ -185,7 +185,7 @@ graph LR
 ```
 terraform-provider-environment/
 ├── internal/provider/
-│   ├── provider.go                          # Updated: Add Functions() method
+│   ├── provider.go                          # Updated: Add interface assertion + Functions() method
 │   ├── provider_test.go                     # Existing
 │   │
 │   ├── variable_data_source.go              # Existing: Terraform 1.0+
@@ -193,10 +193,10 @@ terraform-provider-environment/
 │   ├── sensitive_variable_data_source.go    # Existing: Terraform 1.0+
 │   ├── sensitive_variable_data_source_test.go # Existing
 │   │
-│   ├── variable_function.go                 # New: Terraform 1.8+
-│   ├── variable_function_test.go            # New
-│   ├── sensitive_variable_function.go       # New: Terraform 1.8+
-│   └── sensitive_variable_function_test.go  # New
+│   ├── variable_function.go                 # New: Terraform 1.8+ (with fmt import)
+│   ├── variable_function_test.go            # New (includes edge case tests)
+│   ├── sensitive_variable_function.go       # New: Terraform 1.8+ (with fmt import)
+│   └── sensitive_variable_function_test.go  # New (includes sensitivity tests)
 │
 ├── examples/
 │   ├── data-sources/                        # Existing examples
@@ -219,10 +219,14 @@ terraform-provider-environment/
 │       └── sensitive_variable.md
 │
 ├── templates/
-│   └── index.md.tmpl                        # Updated: Add functions section
+│   └── index.md.tmpl                        # Updated: Add "Functions (Terraform 1.8+)" section
 │
-├── DESIGN_FUNCTIONS.md                      # This design document
-├── ARCHITECTURE_DIAGRAM.md                  # This file
+├── docs/planning/issue-61-provider-functions/
+│   ├── DESIGN_FUNCTIONS.md                  # Design specification
+│   ├── ARCHITECTURE_DIAGRAM.md              # This file
+│   ├── IMPLEMENTATION_CHECKLIST.md          # Step-by-step guide
+│   └── SUMMARY.md                           # Executive summary
+│
 └── README.md                                # Updated: Add functions example
 ```
 
@@ -344,6 +348,9 @@ graph LR
 | Two separate functions (variable, sensitive_variable) | Terraform function return types must be statically defined; cannot conditionally mark as sensitive |
 | Keep existing data sources unchanged | Maintain backward compatibility with Terraform < 1.8 |
 | Mirror data source naming | Consistency with existing API |
-| Error on missing variable | Explicit failure prevents silent configuration errors |
+| Error on missing variable | Explicit failure prevents silent configuration errors; matches data source behavior |
+| Consistent error message format | Use `fmt.Sprintf("Environment variable %q not found", name)` for clarity |
+| Add interface assertion | Compile-time safety check following existing patterns |
 | No state storage for functions | Functions are evaluated on-demand per Terraform design |
 | Separate implementation files | Follows existing code organization patterns |
+| Add code comments | Improve maintainability and documentation |
