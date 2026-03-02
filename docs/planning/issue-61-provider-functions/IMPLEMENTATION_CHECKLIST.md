@@ -15,6 +15,11 @@ This checklist provides a step-by-step guide for implementing the provider-defin
 
 - [ ] Open [`internal/provider/provider.go`](internal/provider/provider.go)
 - [ ] Add import: `"github.com/hashicorp/terraform-plugin-framework/function"`
+- [ ] Add interface assertion (CRITICAL):
+  ```go
+  // Ensure the implementation satisfies the provider.ProviderWithFunctions interface.
+  var _ provider.ProviderWithFunctions = &environmentProvider{}
+  ```
 - [ ] Add `Functions()` method to `environmentProvider`:
   ```go
   func (p *environmentProvider) Functions(ctx context.Context) []func() function.Function {
@@ -24,11 +29,13 @@ This checklist provides a step-by-step guide for implementing the provider-defin
       }
   }
   ```
+- [ ] Update provider schema description to mention Terraform 1.8+ functions support
 - [ ] Verify code compiles: `go build ./...`
 
 ### 1.2 Implement Variable Function
 
 - [ ] Create [`internal/provider/variable_function.go`](internal/provider/variable_function.go)
+- [ ] Add imports including `"fmt"` for error formatting
 - [ ] Implement `variableFunction` struct
 - [ ] Implement `NewVariableFunction()` constructor
 - [ ] Implement `Metadata()` method (name: "variable")
@@ -37,15 +44,17 @@ This checklist provides a step-by-step guide for implementing the provider-defin
   - [ ] String parameter "name"
   - [ ] String return type (non-sensitive)
 - [ ] Implement `Run()` method with:
+  - [ ] Add comment: "Run executes the function logic..."
   - [ ] Argument parsing
   - [ ] `os.LookupEnv()` call
-  - [ ] Error handling for missing variables
+  - [ ] Error handling using `fmt.Sprintf("Environment variable %q not found", name)`
   - [ ] Result setting
 - [ ] Verify code compiles: `go build ./...`
 
 ### 1.3 Implement Sensitive Variable Function
 
 - [ ] Create [`internal/provider/sensitive_variable_function.go`](internal/provider/sensitive_variable_function.go)
+- [ ] Add imports including `"fmt"` for error formatting
 - [ ] Implement `sensitiveVariableFunction` struct
 - [ ] Implement `NewSensitiveVariableFunction()` constructor
 - [ ] Implement `Metadata()` method (name: "sensitive_variable")
@@ -53,7 +62,10 @@ This checklist provides a step-by-step guide for implementing the provider-defin
   - [ ] Summary and description
   - [ ] String parameter "name"
   - [ ] String return type with `Sensitive: true`
-- [ ] Implement `Run()` method (same logic as variable function)
+- [ ] Implement `Run()` method:
+  - [ ] Add comment: "Run executes the function logic..."
+  - [ ] Same logic as variable function
+  - [ ] Use consistent error message format
 - [ ] Verify code compiles: `go build ./...`
 
 ### 1.4 Unit Tests - Variable Function
@@ -74,7 +86,14 @@ This checklist provides a step-by-step guide for implementing the provider-defin
   - [ ] Call function
   - [ ] Assert empty string returned (not error)
 - [ ] Implement `TestVariableFunction_SpecialCharacters`:
-  - [ ] Test with special characters in name and value
+  - [ ] Test with unicode characters
+  - [ ] Test with spaces and quotes
+  - [ ] Assert correct handling
+- [ ] Implement `TestVariableFunction_MultilineValue`:
+  - [ ] Test with newlines in value
+  - [ ] Assert correct handling
+- [ ] Implement `TestVariableFunction_LargeValue`:
+  - [ ] Test with value >1KB
   - [ ] Assert correct handling
 - [ ] Run tests: `go test -v ./internal/provider/ -run TestVariableFunction`
 - [ ] Verify all tests pass
@@ -134,9 +153,10 @@ This checklist provides a step-by-step guide for implementing the provider-defin
 
 ### 2.3 Backward Compatibility Tests
 
-- [ ] Verify existing data source tests still pass
-- [ ] Test mixed usage (data sources + functions in same config)
+- [ ] Verify existing data source tests still pass: `make test`
+- [ ] Create test with mixed usage (data sources + functions in same config)
 - [ ] Verify data sources work independently
+- [ ] Verify error messages are consistent between data sources and functions
 
 ### 2.4 Verify Phase 2
 
@@ -149,7 +169,7 @@ This checklist provides a step-by-step guide for implementing the provider-defin
 ### 3.1 Update Provider Documentation Template
 
 - [ ] Open [`templates/index.md.tmpl`](templates/index.md.tmpl)
-- [ ] Add "Functions" section after data sources section
+- [ ] Add "Functions (Terraform 1.8+)" section after data sources section
 - [ ] Document `variable` function with:
   - [ ] Signature
   - [ ] Description
@@ -158,7 +178,11 @@ This checklist provides a step-by-step guide for implementing the provider-defin
   - [ ] Signature
   - [ ] Description
   - [ ] Example usage
-- [ ] Add "Migration from Data Sources to Functions" section
+- [ ] Add "Migration from Data Sources to Functions" section with:
+  - [ ] Before/after comparison
+  - [ ] Benefits of functions
+  - [ ] When to use functions vs data sources
+  - [ ] Note about coexistence (both can be used together)
 - [ ] Include comparison table (data sources vs functions)
 
 ### 3.2 Create Function Examples
@@ -180,7 +204,8 @@ This checklist provides a step-by-step guide for implementing the provider-defin
 - [ ] Open [`README.md`](README.md)
 - [ ] Add "Functions (Terraform 1.8+)" section after data source example
 - [ ] Include basic function usage example
-- [ ] Add note about Terraform version requirements
+- [ ] Add note about Terraform version requirements (>= 1.8 for functions)
+- [ ] Mention that data sources still work for Terraform >= 1.0
 - [ ] Update requirements section if needed
 
 ### 3.4 Generate Documentation
