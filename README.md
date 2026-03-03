@@ -1,13 +1,15 @@
 # Terraform Provider Environment [![release](https://github.com/MorganPeat/terraform-provider-environment/actions/workflows/release.yml/badge.svg)](https://github.com/MorganPeat/terraform-provider-environment/actions/workflows/release.yml)
 
-The `environment` provider reads shell environment variables and makes them available as a terraform data source.  
+The `environment` provider reads shell environment variables and makes them available as terraform data sources and functions.
 
 
 ## Documentation
 
 The documentation for this provider is available on the [Terraform Registry](https://registry.terraform.io/providers/morganpeat/environment/latest/docs).
 
-## Example
+## Examples
+
+### Data Sources (Terraform 1.0+)
 
 ```hcl
 terraform {
@@ -30,14 +32,39 @@ output "path" {
 }
 ```
 
-```shell
-terraform init && terraform plan
+### Functions (Terraform 1.8+)
+
+For Terraform 1.8 and later, you can use provider-defined functions for a more concise syntax:
+
+```hcl
+terraform {
+  required_version = ">= 1.8"
+  required_providers {
+    environment = {
+      source = "registry.terraform.io/morganpeat/environment"
+    }
+  }
+}
+
+provider "environment" {}
+
+# Read environment variable using function
+output "path" {
+  value = provider::environment::variable("PATH")
+}
+
+# Read sensitive environment variable
+output "api_key" {
+  value     = provider::environment::sensitive_variable("API_KEY")
+  sensitive = true
+}
 ```
 
+See the [documentation](https://registry.terraform.io/providers/morganpeat/environment/latest/docs) for more details on functions and migration guidance.
 
 ## Requirements
 
-* [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+* [Terraform](https://www.terraform.io/downloads.html) >= 1.0 (>= 1.8 for functions)
 * [Go](https://golang.org/doc/install) >= 1.19
 
 ## Building the Provider
