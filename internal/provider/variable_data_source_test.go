@@ -16,8 +16,9 @@ data "environment_variable" "path" {
 `
 
 func TestAccEnvironmentVariableDataSource(t *testing.T) {
+	_, tfAccSet := os.LookupEnv("TF_ACC")
 	resource.Test(t, resource.TestCase{
-		IsUnitTest:               os.Getenv("TF_ACC") == "",
+		IsUnitTest:               !tfAccSet,
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -44,11 +45,12 @@ func TestAccEnvironmentVariableDataSource_ErrorPaths(t *testing.T) {
 		},
 	}
 
+	_, tfAccSet := os.LookupEnv("TF_ACC")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Unsetenv(tt.varName)
 			resource.Test(t, resource.TestCase{
-				IsUnitTest:               os.Getenv("TF_ACC") == "",
+				IsUnitTest:               !tfAccSet,
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{

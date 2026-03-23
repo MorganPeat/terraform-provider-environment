@@ -16,8 +16,9 @@ data "environment_sensitive_variable" "path" {
 `
 
 func TestAccEnvironmentSensitiveVariableDataSource(t *testing.T) {
+	_, tfAccSet := os.LookupEnv("TF_ACC")
 	resource.Test(t, resource.TestCase{
-		IsUnitTest:               os.Getenv("TF_ACC") == "",
+		IsUnitTest:               !tfAccSet,
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
