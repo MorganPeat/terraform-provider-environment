@@ -24,7 +24,7 @@ go test -v -run TestAccEnvironmentVariableDataSource ./internal/provider/
 
 ## Key Patterns
 
-- **Tests use `IsUnitTest: true`** — acceptance tests run without `TF_ACC=1` because of this flag; `make test` runs them all.
+- **Tests adapt to environment** — `IsUnitTest` is set based on `TF_ACC` environment variable. Runs in-process without `TF_ACC`, and as acceptance tests with `TF_ACC=1`.
 - **`sensitiveVariableDataSource.Read` delegates to `NewVariableDataSource().Read()`** — the only difference between the two data sources is `Sensitive: true` on the `value` schema attribute.
 - **`id` is always set equal to `name`** — this is the convention for both data sources.
 - **`go generate`** runs two things: `terraform fmt -recursive ./examples/` and `tfplugindocs` — run it after changing schemas or examples.
