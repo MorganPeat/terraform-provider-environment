@@ -1,50 +1,47 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+Version change: 0.0.0 -> 1.0.0
+Modified principles:
+- Initial ratification of constitution
+Added sections:
+- Core Principles (Framework First, Acceptance Testing, Documentation Quality, Idiomatic Go, Security & Sensitivity)
+- Provider Design
+- Development Standards
+Templates requiring updates:
+- .specify/templates/plan-template.md (⚠ pending)
+- .specify/templates/spec-template.md (⚠ pending)
+- .specify/templates/tasks-template.md (⚠ pending)
+Follow-up: None
+-->
+# Terraform Provider Environment Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Framework First
+The provider MUST be built using the `terraform-plugin-framework`. All resources and data sources must implement the `resource.Resource` or `datasource.DataSource` interfaces. Avoid using the legacy SDK unless strictly necessary for backward compatibility with pre-existing resources (not applicable for new providers).
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Acceptance Testing (Non-Negotiable)
+Every resource and data source MUST have acceptance tests (`TestAcc...`) that run against real Terraform execution. Tests must verify the full lifecycle: create, read, update, and delete. Mocking is discouraged for acceptance tests; use real environment interactions where possible.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Documentation Quality
+All schemas (attributes, blocks) MUST have clear, user-centric `MarkdownDescription`s. Documentation is generated via `tfplugindocs`. Examples MUST be functional and copy-pasteable. If a field is sensitive, it MUST be documented as such.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Idiomatic Go
+Code MUST follow standard Go conventions. Contexts (`context.Context`) MUST be propagated through all request pipelines. Errors MUST be wrapped with context (e.g., `fmt.Errorf("reading environment variable: %w", err)`). Avoid global state.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Security & Sensitivity
+Since this provider exposes environment variables, sensitive data handling is critical. Any attribute that might contain secrets MUST be marked `Sensitive: true`. The provider must never log sensitive values in plain text.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Provider Design
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Provider configuration should be minimal. Where possible, configuration should be sourced from the environment or standard Terraform conventions. The provider must support `terraform-registry-manifest.json` for proper registry publishing.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Standards
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Code must pass `golangci-lint` with standard presets. `go fmt` is mandatory. Commit messages should follow conventional commits (feat, fix, docs, chore).
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution governs all development on the Terraform Provider Environment. Amendments require a Pull Request with justification. All code reviews must verify compliance with these principles.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-03-23 | **Last Amended**: 2026-03-23
