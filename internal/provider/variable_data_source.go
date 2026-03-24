@@ -2,10 +2,12 @@ package provider
 
 import (
 	"context"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -38,11 +40,14 @@ Any change in the value of the shell environment variable will show up as a chan
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Unique identifier for this resource. This matches the name of the environment variable.",
+				MarkdownDescription: "Unique identifier for this data source instance. This matches the name of the environment variable.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read.",
+				MarkdownDescription: "The name of the shell environment variable to read. This must not be empty and must not include leading or trailing whitespace.",
+				Validators: []validator.String{
+					environmentVariableNameValidator{},
+				},
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,
@@ -60,18 +65,34 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	v, ok := os.LookupEnv(data.Name.ValueString())
+	value, ok := readEnvironmentVariableDataSourceValue(data.Name, &resp.Diagnostics)
 	if !ok {
-		resp.Diagnostics.AddError(
-			"Not found",
-			"The environment variable is not present.",
-		)
 		return
 	}
 
 	data.ID = data.Name
-	data.Value = types.StringValue(v)
+	data.Value = types.StringValue(value)
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+}
+
+func readEnvironmentVariableDataSourceValue(name types.String, diags *diag.Diagnostics) (string, bool) {
+	if name.IsNull() || name.IsUnknown() {
+		diags.AddAttributeError(
+			path.Root("name"),
+			invalidVariableLookupErrorSummary,
+			canonicalInvalidVariableError,
+		)
+		return "", false
+	}
+
+	value, err := lookupEnvironmentVariable(name.ValueString())
+	if err != nil {
+		summary, detail := lookupErrorSummaryAndDetail(err)
+		diags.AddAttributeError(path.Root("name"), summary, detail)
+		return "", false
+	}
+
+	return value, true
 }
 
 // NewVariableDataSource is a helper function to simplify the provider implementation.

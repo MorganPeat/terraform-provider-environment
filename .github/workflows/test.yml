@@ -48,7 +48,7 @@ jobs:
         run: make build
 
   test:
-    name: "Acc. Tests (OS: ${{ matrix.os }} / TF: ${{ matrix.terraform }})"
+    name: "Provider Tests (OS: ${{ matrix.os }} / TF: ${{ matrix.terraform }})"
     needs: build
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
@@ -60,6 +60,8 @@ jobs:
           - windows-latest
           - ubuntu-latest
         terraform:
+          - "1.8.*"
+          - "1.9.*"
           - "1.10.*"
           - "1.11.*"
           - "1.12.*"
@@ -81,5 +83,5 @@ jobs:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
 
-      - name: Run acceptance test
+      - name: Run provider test suite
         run: make testacc

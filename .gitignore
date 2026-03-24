@@ -20,3 +20,9 @@
 # Go workspace file
 go.work
 dist/
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
