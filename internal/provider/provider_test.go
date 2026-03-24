@@ -19,6 +19,12 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 func testUnsetEnv(t testing.TB, name string) {
 	t.Helper()
 
+	if err := validateEnvironmentVariableName(name); err != nil {
+		// Invalid names are never looked up by provider code, and attempting to
+		// unset them is platform-dependent (Windows returns an error for empty names).
+		return
+	}
+
 	originalValue, originalSet := os.LookupEnv(name)
 
 	if err := os.Unsetenv(name); err != nil {
