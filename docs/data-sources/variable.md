@@ -30,9 +30,9 @@ output "path" {
 
 ### Required
 
-- `name` (String) The name of the shell environment variable to read.
+- `name` (String) The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.
 
 ### Read-Only
 
-- `id` (String) Unique identifier for this resource. This matches the name of the environment variable.
+- `id` (String) Unique identifier for this data source instance. This matches the name of the environment variable.
 - `value` (String) The value of the shell environment variable.

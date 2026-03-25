@@ -5,6 +5,7 @@ subcategory: ""
 description: |-
   The sensitive variable data source exposes a sensitive shell environment variable to terraform.
   Any change in the value of the shell environment variable will show up as a change in the terraform plan.
+  Sensitive values are redacted in Terraform CLI output, but they are still stored in state. Use encrypted or remote state backends and handle state as sensitive data.
 ---
 
 # environment_sensitive_variable (Data Source)
@@ -13,15 +14,26 @@ The sensitive variable data source exposes a sensitive shell environment variabl
 
 Any change in the value of the shell environment variable will show up as a change in the terraform plan.
 
+Sensitive values are redacted in Terraform CLI output, but they are still stored in state. Use encrypted or remote state backends and handle state as sensitive data.
+
 ## Example Usage
 
 ```terraform
+terraform {
+  required_version = ">= 1.8.0"
+}
+
 data "environment_sensitive_variable" "path" {
   name = "PATH"
 }
 
 output "path" {
   value     = data.environment_sensitive_variable.path.value
+  sensitive = true
+}
+
+output "path_via_function_with_explicit_sensitivity" {
+  value     = sensitive(provider::environment::variable("PATH"))
   sensitive = true
 }
 ```
@@ -31,9 +43,9 @@ output "path" {
 
 ### Required
 
-- `name` (String) The name of the shell environment variable to read.
+- `name` (String) The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.
 
 ### Read-Only
 
-- `id` (String) Unique identifier for this resource. This matches the name of the environment variable.
+- `id` (String) Unique identifier for this data source instance. This matches the name of the environment variable.
 - `value` (String, Sensitive) The value of the shell environment variable.

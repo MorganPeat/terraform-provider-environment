@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -28,7 +29,7 @@ func (d *variableDataSource) Metadata(_ context.Context, req datasource.Metadata
 }
 
 // Schema defines the schema for the data source.
-func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *variableDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 The variable data source exposes a shell environment variable to terraform.
@@ -38,11 +39,11 @@ Any change in the value of the shell environment variable will show up as a chan
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
-				MarkdownDescription: "Unique identifier for this resource. This matches the name of the environment variable.",
+				MarkdownDescription: "Unique identifier for this data source instance. This matches the name of the environment variable.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read.",
+				MarkdownDescription: "The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.",
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,
@@ -64,14 +65,14 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Not found",
-			"The environment variable is not present.",
+			fmt.Sprintf("environment variable '%s' not found", data.Name.ValueString()),
 		)
 		return
 	}
 
 	data.ID = data.Name
 	data.Value = types.StringValue(v)
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 // NewVariableDataSource is a helper function to simplify the provider implementation.
