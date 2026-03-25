@@ -62,17 +62,17 @@ func TestAccLookupParity_MissingEmptyAndWhitespaceNames(t *testing.T) {
 		{
 			name:         "missing variable name",
 			variableName: "TF_PROVIDER_ENV_PARITY_MISSING",
-			expectError:  canonicalMissingVariableErrorRegexp(),
+			expectError:  missingVariableErrorRegexp("TF_PROVIDER_ENV_PARITY_MISSING"),
 		},
 		{
 			name:         "empty variable name",
 			variableName: "",
-			expectError:  canonicalInvalidVariableErrorRegexp(),
+			expectError:  missingVariableErrorRegexp(""),
 		},
 		{
 			name:         "whitespace variable name",
 			variableName: " TF_PROVIDER_ENV_PARITY_WHITESPACE ",
-			expectError:  canonicalInvalidVariableErrorRegexp(),
+			expectError:  missingVariableErrorRegexp(" TF_PROVIDER_ENV_PARITY_WHITESPACE "),
 		},
 	}
 

@@ -31,12 +31,12 @@ func TestAccEnvironmentVariableDataSource_ErrorPaths(t *testing.T) {
 	tests := []struct {
 		name        string
 		varName     string
-		expectError string
+		expectError *regexp.Regexp
 	}{
 		{
 			name:        "missing environment variable returns error",
 			varName:     "TF_PROVIDER_ENV_TEST_DEFINITELY_NOT_SET_XYZ",
-			expectError: "Not found",
+			expectError: missingVariableErrorRegexp("TF_PROVIDER_ENV_TEST_DEFINITELY_NOT_SET_XYZ"),
 		},
 	}
 
@@ -49,7 +49,7 @@ func TestAccEnvironmentVariableDataSource_ErrorPaths(t *testing.T) {
 				Steps: []resource.TestStep{
 					{
 						Config:      testAccEnvironmentVariableDataSourceConfig(tt.varName),
-						ExpectError: regexp.MustCompile(tt.expectError),
+						ExpectError: tt.expectError,
 					},
 				},
 			})
@@ -86,27 +86,27 @@ func TestAccEnvironmentVariableDataSource_MissingMessage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEnvironmentVariableDataSourceConfig(missingVar),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta(canonicalMissingVariableError)),
+				ExpectError: missingVariableErrorRegexp(missingVar),
 			},
 		},
 	})
 }
 
-func TestAccEnvironmentVariableDataSource_InvalidName(t *testing.T) {
+func TestAccEnvironmentVariableDataSource_EmptyAndWhitespaceNames(t *testing.T) {
 	testCases := []struct {
 		name        string
 		varName     string
 		expectError *regexp.Regexp
 	}{
 		{
-			name:        "empty variable name returns validation error",
+			name:        "empty variable name returns not found error",
 			varName:     "",
-			expectError: canonicalInvalidVariableErrorRegexp(),
+			expectError: missingVariableErrorRegexp(""),
 		},
 		{
-			name:        "whitespace variable name returns validation error",
+			name:        "whitespace variable name returns not found error",
 			varName:     " TF_PROVIDER_ENV_WHITESPACE ",
-			expectError: canonicalInvalidVariableErrorRegexp(),
+			expectError: missingVariableErrorRegexp(" TF_PROVIDER_ENV_WHITESPACE "),
 		},
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -25,7 +24,7 @@ func (d *sensitiveVariableDataSource) Metadata(_ context.Context, req datasource
 }
 
 // Schema defines the schema for the data source.
-func (d *sensitiveVariableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *sensitiveVariableDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 The sensitive variable data source exposes a sensitive shell environment variable to terraform.
@@ -41,10 +40,7 @@ Sensitive values are redacted in Terraform CLI output, but they are still stored
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read. This must not be empty and must not include leading or trailing whitespace.",
-				Validators: []validator.String{
-					environmentVariableNameValidator{},
-				},
+				MarkdownDescription: "The name of the shell environment variable to read.",
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,
@@ -57,5 +53,5 @@ Sensitive values are redacted in Terraform CLI output, but they are still stored
 
 // Read refreshes the Terraform state with the latest data.
 func (d *sensitiveVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	NewVariableDataSource().Read(ctx, req, resp)
+	(&variableDataSource{}).Read(ctx, req, resp)
 }

@@ -19,9 +19,9 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 func testUnsetEnv(t testing.TB, name string) {
 	t.Helper()
 
-	if err := validateEnvironmentVariableName(name); err != nil {
-		// Invalid names are never looked up by provider code, and attempting to
-		// unset them is platform-dependent (Windows returns an error for empty names).
+	if name == "" {
+		// Empty names are invalid on some platforms, but the provider still treats
+		// them as a lookup miss during tests.
 		return
 	}
 
@@ -32,15 +32,14 @@ func testUnsetEnv(t testing.TB, name string) {
 	}
 
 	t.Cleanup(func() {
-		var err error
-
 		if originalSet {
-			err = os.Setenv(name, originalValue)
-		} else {
-			err = os.Unsetenv(name)
+			if err := os.Setenv(name, originalValue); err != nil {
+				t.Errorf("failed to restore environment variable %q: %v", name, err)
+			}
+			return
 		}
 
-		if err != nil {
+		if err := os.Unsetenv(name); err != nil {
 			t.Errorf("failed to restore environment variable %q: %v", name, err)
 		}
 	})
@@ -70,19 +69,12 @@ output "value" {
 `, name)
 }
 
-func canonicalMissingVariableErrorRegexp() *regexp.Regexp {
-	parts := strings.Fields(canonicalMissingVariableError)
-	quotedParts := make([]string, 0, len(parts))
-
-	for _, part := range parts {
-		quotedParts = append(quotedParts, regexp.QuoteMeta(part))
-	}
-
-	return regexp.MustCompile(strings.Join(quotedParts, `\s+`))
+func missingVariableErrorMessage(name string) string {
+	return fmt.Sprintf("environment variable '%s' not found", name)
 }
 
-func canonicalInvalidVariableErrorRegexp() *regexp.Regexp {
-	parts := strings.Fields(canonicalInvalidVariableError)
+func missingVariableErrorRegexp(name string) *regexp.Regexp {
+	parts := strings.Fields(missingVariableErrorMessage(name))
 	quotedParts := make([]string, 0, len(parts))
 
 	for _, part := range parts {

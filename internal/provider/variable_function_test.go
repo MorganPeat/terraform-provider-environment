@@ -33,23 +33,23 @@ func TestAccEnvironmentVariableFunction_MissingVariable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVariableFunctionConfig(missingVar),
-				ExpectError: canonicalMissingVariableErrorRegexp(),
+				ExpectError: missingVariableErrorRegexp(missingVar),
 			},
 		},
 	})
 }
 
-func TestAccEnvironmentVariableFunction_InvalidName(t *testing.T) {
+func TestAccEnvironmentVariableFunction_EmptyAndWhitespaceNames(t *testing.T) {
 	testCases := []struct {
 		name    string
 		varName string
 	}{
 		{
-			name:    "empty variable name returns validation error",
+			name:    "empty variable name returns not found error",
 			varName: "",
 		},
 		{
-			name:    "whitespace variable name returns validation error",
+			name:    "whitespace variable name returns not found error",
 			varName: " TF_PROVIDER_ENV_FUNCTION_WHITESPACE ",
 		},
 	}
@@ -62,7 +62,7 @@ func TestAccEnvironmentVariableFunction_InvalidName(t *testing.T) {
 				Steps: []resource.TestStep{
 					{
 						Config:      testAccVariableFunctionConfig(testCase.varName),
-						ExpectError: canonicalInvalidVariableErrorRegexp(),
+						ExpectError: missingVariableErrorRegexp(testCase.varName),
 					},
 				},
 			})

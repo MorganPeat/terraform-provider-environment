@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func TestLookupEnvironmentVariable(t *testing.T) {
 		name          string
 		lookupName    string
 		expectedValue string
-		expectedError error
+		expectedError string
 	}{
 		{
 			name:          "found variable returns value",
@@ -26,22 +25,22 @@ func TestLookupEnvironmentVariable(t *testing.T) {
 			expectedValue: "",
 		},
 		{
-			name:          "missing variable returns canonical error",
+			name:          "missing variable returns not found error",
 			lookupName:    "TF_PROVIDER_ENV_LOOKUP_MISSING",
 			expectedValue: "",
-			expectedError: missingVariableLookupError,
+			expectedError: missingVariableErrorMessage("TF_PROVIDER_ENV_LOOKUP_MISSING"),
 		},
 		{
-			name:          "empty variable name returns validation error",
+			name:          "empty variable name returns not found error",
 			lookupName:    "",
 			expectedValue: "",
-			expectedError: invalidVariableLookupError,
+			expectedError: missingVariableErrorMessage(""),
 		},
 		{
-			name:          "whitespace padded variable name returns validation error",
+			name:          "whitespace padded variable name returns not found error",
 			lookupName:    " TF_PROVIDER_ENV_LOOKUP_FOUND ",
 			expectedValue: "",
-			expectedError: invalidVariableLookupError,
+			expectedError: missingVariableErrorMessage(" TF_PROVIDER_ENV_LOOKUP_FOUND "),
 		},
 	}
 
@@ -53,12 +52,18 @@ func TestLookupEnvironmentVariable(t *testing.T) {
 				t.Fatalf("expected value %q, got %q", testCase.expectedValue, actualValue)
 			}
 
-			if testCase.expectedError == nil && actualErr != nil {
+			if testCase.expectedError == "" && actualErr != nil {
 				t.Fatalf("expected no error, got %#v", actualErr)
 			}
 
-			if testCase.expectedError != nil && !errors.Is(actualErr, testCase.expectedError) {
-				t.Fatalf("expected error %#v, got %#v", testCase.expectedError, actualErr)
+			if testCase.expectedError != "" {
+				if actualErr == nil {
+					t.Fatalf("expected error %q, got nil", testCase.expectedError)
+				}
+
+				if actualErr.Error() != testCase.expectedError {
+					t.Fatalf("expected error %q, got %q", testCase.expectedError, actualErr.Error())
+				}
 			}
 		})
 	}

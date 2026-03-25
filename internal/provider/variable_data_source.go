@@ -5,9 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -30,7 +28,7 @@ func (d *variableDataSource) Metadata(_ context.Context, req datasource.Metadata
 }
 
 // Schema defines the schema for the data source.
-func (d *variableDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *variableDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `
 The variable data source exposes a shell environment variable to terraform.
@@ -44,10 +42,7 @@ Any change in the value of the shell environment variable will show up as a chan
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read. This must not be empty and must not include leading or trailing whitespace.",
-				Validators: []validator.String{
-					environmentVariableNameValidator{},
-				},
+				MarkdownDescription: "The name of the shell environment variable to read.",
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,
@@ -65,34 +60,15 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	value, ok := readEnvironmentVariableDataSourceValue(data.Name, &resp.Diagnostics)
-	if !ok {
+	value, err := lookupEnvironmentVariable(data.Name.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(path.Root("name"), "Error looking up environment variable", err.Error())
 		return
 	}
 
 	data.ID = data.Name
 	data.Value = types.StringValue(value)
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
-}
-
-func readEnvironmentVariableDataSourceValue(name types.String, diags *diag.Diagnostics) (string, bool) {
-	if name.IsNull() || name.IsUnknown() {
-		diags.AddAttributeError(
-			path.Root("name"),
-			invalidVariableLookupErrorSummary,
-			canonicalInvalidVariableError,
-		)
-		return "", false
-	}
-
-	value, err := lookupEnvironmentVariable(name.ValueString())
-	if err != nil {
-		summary, detail := lookupErrorSummaryAndDetail(err)
-		diags.AddAttributeError(path.Root("name"), summary, detail)
-		return "", false
-	}
-
-	return value, true
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 // NewVariableDataSource is a helper function to simplify the provider implementation.

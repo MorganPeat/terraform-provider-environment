@@ -57,21 +57,21 @@ func TestAccEnvironmentSensitiveVariableDataSource_EmptyValue(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentSensitiveVariableDataSource_InvalidName(t *testing.T) {
+func TestAccEnvironmentSensitiveVariableDataSource_EmptyAndWhitespaceNames(t *testing.T) {
 	testCases := []struct {
 		name        string
 		varName     string
 		expectError *regexp.Regexp
 	}{
 		{
-			name:        "empty variable name returns validation error",
+			name:        "empty variable name returns not found error",
 			varName:     "",
-			expectError: canonicalInvalidVariableErrorRegexp(),
+			expectError: missingVariableErrorRegexp(""),
 		},
 		{
-			name:        "whitespace variable name returns validation error",
+			name:        "whitespace variable name returns not found error",
 			varName:     " TF_PROVIDER_ENV_SENSITIVE_WHITESPACE ",
-			expectError: canonicalInvalidVariableErrorRegexp(),
+			expectError: missingVariableErrorRegexp(" TF_PROVIDER_ENV_SENSITIVE_WHITESPACE "),
 		},
 	}
 
@@ -101,7 +101,7 @@ func TestAccEnvironmentSensitiveVariableDataSource_MissingMessage(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEnvironmentSensitiveVariableDataSourceConfig(missingVar),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta(canonicalMissingVariableError)),
+				ExpectError: missingVariableErrorRegexp(missingVar),
 			},
 		},
 	})
