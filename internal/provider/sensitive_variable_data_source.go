@@ -40,7 +40,7 @@ Sensitive values are redacted in Terraform CLI output, but they are still stored
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read.",
+				MarkdownDescription: "The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.",
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,

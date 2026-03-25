@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -25,12 +27,14 @@ func (f *variableFunction) Definition(_ context.Context, _ function.DefinitionRe
 		MarkdownDescription: `
 Read one shell environment variable by name and return its value.
 
+The function looks up the exact name you pass, including any leading or trailing whitespace.
+
 Provider-defined functions require Terraform 1.8 or later.
 `,
 		Parameters: []function.Parameter{
 			function.StringParameter{
 				Name:                "name",
-				MarkdownDescription: "The name of the shell environment variable to read.",
+				MarkdownDescription: "The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.",
 			},
 		},
 		Return: function.StringReturn{},
@@ -45,9 +49,9 @@ func (f *variableFunction) Run(ctx context.Context, req function.RunRequest, res
 		return
 	}
 
-	v, err := lookupEnvironmentVariable(name)
-	if err != nil {
-		resp.Error = function.NewArgumentFuncError(0, err.Error())
+	v, ok := os.LookupEnv(name)
+	if !ok {
+		resp.Error = function.NewArgumentFuncError(0, fmt.Sprintf("environment variable '%s' not found", name))
 		return
 	}
 

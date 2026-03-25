@@ -75,6 +75,36 @@ func TestAccEnvironmentVariableDataSource_EmptyValue(t *testing.T) {
 	})
 }
 
+func TestAccEnvironmentVariableDataSource_WhitespaceName(t *testing.T) {
+	const whitespaceVar = " TF_PROVIDER_ENV_DATA_SOURCE_WHITESPACE "
+	const whitespaceValue = "test-value-data-source-whitespace"
+	const trimmedVar = "TF_PROVIDER_ENV_DATA_SOURCE_WHITESPACE"
+	const trimmedValue = "test-value-data-source-trimmed"
+	testSetEnv(t, whitespaceVar, whitespaceValue)
+	t.Setenv(trimmedVar, trimmedValue)
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentVariableDataSourceConfig(whitespaceVar),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.environment_variable.test", "id", whitespaceVar),
+					resource.TestCheckResourceAttr("data.environment_variable.test", "value", whitespaceValue),
+				),
+			},
+			{
+				Config: testAccEnvironmentVariableDataSourceConfig(trimmedVar),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.environment_variable.test", "id", trimmedVar),
+					resource.TestCheckResourceAttr("data.environment_variable.test", "value", trimmedValue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentVariableDataSource_MissingMessage(t *testing.T) {
 	const missingVar = "TF_PROVIDER_ENV_MISSING_NON_SENSITIVE"
 	t.Setenv("TF_PROVIDER_ENV_OTHER", "value")
@@ -92,36 +122,15 @@ func TestAccEnvironmentVariableDataSource_MissingMessage(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentVariableDataSource_EmptyAndWhitespaceNames(t *testing.T) {
-	testCases := []struct {
-		name        string
-		varName     string
-		expectError *regexp.Regexp
-	}{
-		{
-			name:        "empty variable name returns not found error",
-			varName:     "",
-			expectError: missingVariableErrorRegexp(""),
+func TestAccEnvironmentVariableDataSource_EmptyName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEnvironmentVariableDataSourceConfig(""),
+				ExpectError: missingVariableErrorRegexp(""),
+			},
 		},
-		{
-			name:        "whitespace variable name returns not found error",
-			varName:     " TF_PROVIDER_ENV_WHITESPACE ",
-			expectError: missingVariableErrorRegexp(" TF_PROVIDER_ENV_WHITESPACE "),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
-				IsUnitTest:               true,
-				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Steps: []resource.TestStep{
-					{
-						Config:      testAccEnvironmentVariableDataSourceConfig(testCase.varName),
-						ExpectError: testCase.expectError,
-					},
-				},
-			})
-		})
-	}
+	})
 }

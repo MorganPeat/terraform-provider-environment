@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -57,38 +56,47 @@ func TestAccEnvironmentSensitiveVariableDataSource_EmptyValue(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentSensitiveVariableDataSource_EmptyAndWhitespaceNames(t *testing.T) {
-	testCases := []struct {
-		name        string
-		varName     string
-		expectError *regexp.Regexp
-	}{
-		{
-			name:        "empty variable name returns not found error",
-			varName:     "",
-			expectError: missingVariableErrorRegexp(""),
-		},
-		{
-			name:        "whitespace variable name returns not found error",
-			varName:     " TF_PROVIDER_ENV_SENSITIVE_WHITESPACE ",
-			expectError: missingVariableErrorRegexp(" TF_PROVIDER_ENV_SENSITIVE_WHITESPACE "),
-		},
-	}
+func TestAccEnvironmentSensitiveVariableDataSource_WhitespaceName(t *testing.T) {
+	const whitespaceVar = " TF_PROVIDER_ENV_SENSITIVE_WHITESPACE "
+	const whitespaceValue = "test-value-sensitive-whitespace"
+	const trimmedVar = "TF_PROVIDER_ENV_SENSITIVE_WHITESPACE"
+	const trimmedValue = "test-value-sensitive-trimmed"
+	testSetEnv(t, whitespaceVar, whitespaceValue)
+	t.Setenv(trimmedVar, trimmedValue)
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
-				IsUnitTest:               true,
-				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Steps: []resource.TestStep{
-					{
-						Config:      testAccEnvironmentSensitiveVariableDataSourceConfig(testCase.varName),
-						ExpectError: testCase.expectError,
-					},
-				},
-			})
-		})
-	}
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentSensitiveVariableDataSourceConfig(whitespaceVar),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.environment_sensitive_variable.test", "id", whitespaceVar),
+					resource.TestCheckResourceAttr("data.environment_sensitive_variable.test", "value", whitespaceValue),
+				),
+			},
+			{
+				Config: testAccEnvironmentSensitiveVariableDataSourceConfig(trimmedVar),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.environment_sensitive_variable.test", "id", trimmedVar),
+					resource.TestCheckResourceAttr("data.environment_sensitive_variable.test", "value", trimmedValue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentSensitiveVariableDataSource_EmptyName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEnvironmentSensitiveVariableDataSourceConfig(""),
+				ExpectError: missingVariableErrorRegexp(""),
+			},
+		},
+	})
 }
 
 func TestAccEnvironmentSensitiveVariableDataSource_MissingMessage(t *testing.T) {

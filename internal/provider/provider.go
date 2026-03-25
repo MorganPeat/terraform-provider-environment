@@ -39,7 +39,7 @@ The environment provider reads shell environment variables and makes them availa
 
 The data sources work with Terraform 1.0 and later. Provider-defined functions require Terraform 1.8 or later.
 
-Each environment variable is read using its explicit name. This makes it straightforward to use policy-as-code rules in
+Each environment variable is read using the exact name you provide, including any leading or trailing whitespace. This makes it straightforward to use policy-as-code rules in
 a language like [HashiCorp Sentinel](https://www.hashicorp.com/sentinel) to control which environment variables are
 exposed to terraform state.
 

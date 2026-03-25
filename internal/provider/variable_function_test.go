@@ -39,35 +39,41 @@ func TestAccEnvironmentVariableFunction_MissingVariable(t *testing.T) {
 	})
 }
 
-func TestAccEnvironmentVariableFunction_EmptyAndWhitespaceNames(t *testing.T) {
-	testCases := []struct {
-		name    string
-		varName string
-	}{
-		{
-			name:    "empty variable name returns not found error",
-			varName: "",
-		},
-		{
-			name:    "whitespace variable name returns not found error",
-			varName: " TF_PROVIDER_ENV_FUNCTION_WHITESPACE ",
-		},
-	}
+func TestAccEnvironmentVariableFunction_WhitespaceName(t *testing.T) {
+	const whitespaceVar = " TF_PROVIDER_ENV_FUNCTION_WHITESPACE "
+	const whitespaceValue = "test-value-function-whitespace"
+	const trimmedVar = "TF_PROVIDER_ENV_FUNCTION_WHITESPACE"
+	const trimmedValue = "test-value-function-trimmed"
+	testSetEnv(t, whitespaceVar, whitespaceValue)
+	t.Setenv(trimmedVar, trimmedValue)
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
-				IsUnitTest:               true,
-				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Steps: []resource.TestStep{
-					{
-						Config:      testAccVariableFunctionConfig(testCase.varName),
-						ExpectError: missingVariableErrorRegexp(testCase.varName),
-					},
-				},
-			})
-		})
-	}
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVariableFunctionConfig(whitespaceVar),
+				Check:  resource.TestCheckOutput("value", whitespaceValue),
+			},
+			{
+				Config: testAccVariableFunctionConfig(trimmedVar),
+				Check:  resource.TestCheckOutput("value", trimmedValue),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentVariableFunction_EmptyName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVariableFunctionConfig(""),
+				ExpectError: missingVariableErrorRegexp(""),
+			},
+		},
+	})
 }
 
 func TestAccEnvironmentVariableFunction_EmptyValue(t *testing.T) {

@@ -16,6 +16,29 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 	"environment": providerserver.NewProtocol6WithError(New("test")()),
 }
 
+func testSetEnv(t testing.TB, name, value string) {
+	t.Helper()
+
+	originalValue, originalSet := os.LookupEnv(name)
+
+	if err := os.Setenv(name, value); err != nil {
+		t.Skipf("cannot set environment variable %q on this platform: %v", name, err)
+	}
+
+	t.Cleanup(func() {
+		if originalSet {
+			if err := os.Setenv(name, originalValue); err != nil {
+				t.Errorf("failed to restore environment variable %q: %v", name, err)
+			}
+			return
+		}
+
+		if err := os.Unsetenv(name); err != nil {
+			t.Errorf("failed to restore environment variable %q: %v", name, err)
+		}
+	})
+}
+
 func testUnsetEnv(t testing.TB, name string) {
 	t.Helper()
 

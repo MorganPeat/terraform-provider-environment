@@ -30,7 +30,7 @@ output "path" {
 
 ### Required
 
-- `name` (String) The name of the shell environment variable to read. This must not be empty and must not include leading or trailing whitespace.
+- `name` (String) The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.
 
 ### Read-Only
 

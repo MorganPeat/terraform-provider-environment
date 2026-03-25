@@ -2,10 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -42,7 +43,7 @@ Any change in the value of the shell environment variable will show up as a chan
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The name of the shell environment variable to read.",
+				MarkdownDescription: "The name of the shell environment variable to read. This name is looked up exactly as provided, including any leading or trailing whitespace.",
 			},
 			"value": schema.StringAttribute{
 				Computed:            true,
@@ -60,14 +61,17 @@ func (d *variableDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	value, err := lookupEnvironmentVariable(data.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddAttributeError(path.Root("name"), "Error looking up environment variable", err.Error())
+	v, ok := os.LookupEnv(data.Name.ValueString())
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Not found",
+			fmt.Sprintf("environment variable '%s' not found", data.Name.ValueString()),
+		)
 		return
 	}
 
 	data.ID = data.Name
-	data.Value = types.StringValue(value)
+	data.Value = types.StringValue(v)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 

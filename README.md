@@ -1,6 +1,7 @@
 # Terraform Provider Environment [![release](https://github.com/MorganPeat/terraform-provider-environment/actions/workflows/release.yml/badge.svg)](https://github.com/MorganPeat/terraform-provider-environment/actions/workflows/release.yml)
 
 The `environment` provider reads shell environment variables and makes them available as Terraform data sources and a provider-defined function.
+Each lookup uses the exact environment variable name you pass, including any leading or trailing whitespace.
 
 
 ## Documentation
